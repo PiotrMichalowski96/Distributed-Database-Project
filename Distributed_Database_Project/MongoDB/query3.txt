@@ -1,0 +1,43 @@
+db.Newspapers.aggregate([
+	{
+		$unwind: {
+			path: '$articles',
+			preserveNullAndEmptyArrays: true
+		}
+	},
+	{
+		$unwind: {
+			path: '$articles.categories',
+			preserveNullAndEmptyArrays: true
+		}
+	},
+	{
+		$project: {
+			_id: 0,
+			newspaperName: 1,
+			articles: {
+				categories: 1
+			}
+		}
+	},
+	{
+		$group: {
+			_id: {newspaperName: '$newspaperName', category: '$articles.categories'},
+			Quantity: {$sum: 1}
+		}
+	},
+	{
+		$match: {
+			"_id.newspaperName": {$ne: null},
+			"_id.category": {$ne: null}
+		}	
+	},
+	{
+		$sort: {
+			Quantity: -1
+		}
+	},
+	{
+		$limit: 20
+	}
+]).pretty()

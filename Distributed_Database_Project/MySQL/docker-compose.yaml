@@ -1,0 +1,59 @@
+version: '3'
+services:
+
+  ######## Management Node ########
+
+  management1:
+    container_name: management1
+    image: mysql-cluster
+    command: ndb_mgmd
+    networks:
+      cluster:
+        ipv4_address: 10.100.0.2
+
+  ######## Data Node 1 ########
+
+  ndb1:
+    container_name: ndb1
+    image: mysql-cluster
+    command: ndbd
+    networks:
+      cluster:
+        ipv4_address: 10.100.0.3
+    depends_on:
+      - management1
+      
+
+  ######## Data Node 2 ########
+
+  ndb2:
+    container_name: ndb2
+    image: mysql-cluster
+    command: ndbd
+    networks:
+      cluster:
+        ipv4_address: 10.100.0.4
+    depends_on:
+      - management1
+
+  ######## SQL Node ########
+
+  mysql1:
+    container_name: mysql1
+    image: mysql-cluster
+    command: mysqld
+    networks:
+      cluster:
+        ipv4_address: 10.100.0.10
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=true
+    depends_on:
+      - management1
+      - ndb1
+      - ndb2
+
+networks:
+  cluster:
+    ipam:
+      config:
+        - subnet: 10.100.0.0/16

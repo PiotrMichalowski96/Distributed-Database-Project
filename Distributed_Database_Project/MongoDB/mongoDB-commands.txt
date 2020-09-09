@@ -1,0 +1,162 @@
+----------------------Starting Docker Containers------------------------
+
+sudo docker-compose up -d
+
+----------------------Setting Replica Set Config Options----------------
+
+sudo mongo --port 40001
+
+rs.initiate({
+	_id: 'mongors1conf',
+	configsvr: true,
+	members: [
+	   { _id: 0, host: 'mongocfg1:27017'},
+	   { _id: 1, host: 'mongocfg2:27017'},
+	   { _id: 2, host: 'mongocfg3:27017'}
+	]
+});
+
+rs.status()
+
+----------------------Setting Replica Sets Data Nodes Options-----------
+
+bash -c "echo 'rs.initiate({_id: \"mongors1\",members: [{_id: 0, host: \"mongors1n1:27017\"},{_id: 1, host:\"mongors1n2:27017\"},{_id: 2, host: \"mongors1n3:27017\"}]})' | mongo --port 50001"
+
+bash -c "echo 'rs.initiate({_id: \"mongors2\",members: [{_id: 0, host: \"mongors2n1:27017\"},{_id: 1, host:\"mongors2n2:27017\"},{_id: 2, host: \"mongors2n3:27017\"}]})' | mongo --port 50004"
+
+bash -c "echo 'rs.initiate({_id: \"mongors3\",members: [{_id: 0, host: \"mongors3n1:27017\"},{_id: 1, host:\"mongors3n2:27017\"},{_id: 2, host: \"mongors3n3:27017\"}]})' | mongo --port 50007"
+
+
+----------------------Setting Router Options----------------------------
+
+sudo mongo --port 60000
+
+sh.addShard('mongors1/mongors1n1:27017')
+sh.addShard('mongors2/mongors2n1:27017')
+sh.addShard('mongors3/mongors3n1:27017')
+
+use ReadingService
+
+sh.enableSharding('ReadingService')
+
+sh.shardCollection('ReadingService.Newspapers', {_id: 'hashed'})
+
+
+----------------------After adding data --------------------------------
+
+use ReadingService
+
+db.Newspapers.getShardDistribution()
+
+sh.status()
+
+
+----------------------Adding data----------------------------------------
+
+sudo mongoimport --port 60000 --db ReadingService --collection Newspapers --file NewspaperOnlyOneCollection.json
+
+----------------------Queries--------------------------------------------
+
+sudo mongo --port 60000
+
+use ReadingService
+
+show collections
+
+db.Newspapers.find().pretty()
+
+---------------------Inserts, Updates and Deletes  ----------------------
+
+db.Newspapers.insertOne(
+{
+  "_id": 21,
+  "newspaperName": "Weekly Paper News",
+  "publishDate": {
+    "$date": "2019-12-15T18:27:08Z"
+  },
+  "price": 19,
+  "publisher": 
+    {
+      "publisherName": "Muller Group"
+    }
+  ,
+  "articles": [
+    {
+      "articleTitleRef": "4fface89-5e35-4fb0-8081-14e7d2b9fc05",
+      "publishedOn": {
+        "$date": "2019-11-28T03:11:25Z"
+      },
+      "articleContentRef": "3715439e-b94d-4270-a9f7-b36f97c7bcdf",
+      "categories": [
+        {
+          "categoryName": "News"
+        },
+        {
+          "categoryName": "Nature"
+        },
+        {
+          "categoryName": "Home"
+        }
+      ],
+      "sources": [],
+      "authors": [
+	{
+        "firstname": "Shelby",
+  	"surname": "Aynsley",
+  	"specialization": "Reviews"
+	}
+      ]
+    },
+    {
+      "articleTitleRef": "8f1c5826-7039-4919-8ff4-c6405b39892d",
+      "publishedOn": {
+        "$date": "2020-05-08T03:01:50Z"
+      },
+      "articleContentRef": "4c7184c2-8dfe-435e-8f6f-f4a93e15c178",
+      "categories": [
+        {
+          "categoryName": "People"
+        },
+        {
+          "categoryName": "Health"
+        },
+        {
+          "categoryName": "Politics"
+        }
+      ],
+      "sources": [
+        {
+          "sourceType": "formal",
+          "sourceName": "spokespersons"
+        },
+        {
+          "sourceType": "formal",
+          "sourceName": "other media reports"
+        }
+      ],
+      "authors": [
+        {
+          "firstname": "Dan",
+  	  "surname": "Shipsey",
+  	  "specialization": "Feature Writing"
+        },
+        {
+          "firstname": "Misty",
+  	  "surname": "Grgic",
+  	  "specialization": "News"
+        }
+      ]
+    }
+  ]
+})
+
+
+db.Newspapers.updateOne({_id: 21}, {$set: {newspaperName: 'Monthly Paper News'}})
+
+db.Newspapers.deleteOne({_id: 21})
+
+---------------------Cleaning--------------------------------------------
+
+sudo docker-compose down
+
+sudo docker volume prune

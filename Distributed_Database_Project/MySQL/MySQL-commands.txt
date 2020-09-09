@@ -1,0 +1,31 @@
+-----------------------Build Docker Image---------------------------
+
+sudo docker build -t mysql-cluster mysql-docker/7.5
+
+-----------------------Starting Docker Containers-------------------
+
+sudo docker-compose up -d
+
+-----------------------Testing if the cluster is working fine-------
+
+sudo docker container exec -it management1 ndb_mgm
+
+show
+
+-----------------------Changing password-----------------------------
+
+sudo docker logs mysql1 2>&1 | grep PASSWORD
+
+sudo docker exec -it mysql1 mysql -uroot -p'<here paste a password from the previous command>'
+
+ALTER USER "root"@"localhost" IDENTIFIED BY "root";
+GRANT ALL PRIVILEGES ON *.* TO "root"@"%" IDENTIFIED BY "root" WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+-----------------------Connecting to MySql Router Instance-----------
+
+mysql -h10.100.0.10 -uroot -p
+
+-----------------------Cleaning docker containers--------------------
+
+sudo docker-compose down

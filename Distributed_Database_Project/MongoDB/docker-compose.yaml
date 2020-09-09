@@ -1,0 +1,237 @@
+version: '3'
+services:
+
+  ######## MONGODB SHARD1 ########
+
+  mongors1n1:
+    container_name: mongors1n1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --port 27017 --dbpath /data/db
+    ports:
+      - 50001:27017
+    volumes:
+      - mongors1n1:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors1n1
+    expose:
+      - "27017"
+
+  mongors1n2:
+    container_name: mongors1n2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --port 27017 --dbpath /data/db
+    ports:
+      - 50002:27017
+    volumes:
+      - mongors1n2:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors1n2
+    expose:
+      - "27017"
+
+  mongors1n3:
+    container_name: mongors1n3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --port 27017 --dbpath /data/db
+    ports:
+      - 50003:27017
+    volumes:
+      - mongors1n3:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors1n3
+    expose:
+      - "27017"
+
+  ######## MONGODB SHARD2 ########
+
+  mongors2n1:
+    container_name: mongors2n1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors2 --port 27017 --dbpath /data/db
+    ports:
+      - 50004:27017
+    volumes:
+      - mongors2n1:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors2n1
+    expose:
+      - "27017"
+
+  mongors2n2:
+    container_name: mongors2n2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors2 --port 27017 --dbpath /data/db
+    ports:
+      - 50005:27017
+    volumes:
+      - mongors2n2:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors2n2
+    expose:
+      - "27017"
+
+  mongors2n3:
+    container_name: mongors2n3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors2 --port 27017 --dbpath /data/db
+    ports:
+      - 50006:27017
+    volumes:
+      - mongors2n3:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors2n3
+    expose:
+      - "27017"
+
+  ######## MONGODB SHARD3 ########
+
+  mongors3n1:
+    container_name: mongors3n1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors3 --port 27017 --dbpath /data/db
+    ports:
+      - 50007:27017
+    volumes:
+      - mongors3n1:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors3n1
+    expose:
+      - "27017"
+
+  mongors3n2:
+    container_name: mongors3n2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors3 --port 27017 --dbpath /data/db
+    ports:
+      - 50008:27017
+    volumes:
+      - mongors3n2:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors3n2
+    expose:
+      - "27017"
+
+  mongors3n3:
+    container_name: mongors3n3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors3 --port 27017 --dbpath /data/db
+    ports:
+      - 50009:27017
+    volumes:
+      - mongors3n3:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongors3n3
+    expose:
+      - "27017"
+
+  ######## MONGODB CONFIGDB ########
+
+  mongocfg1:
+    container_name: mongocfg1
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --port 27017 --dbpath /data/db
+    ports:
+      - 40001:27017
+    volumes:
+      - mongocfg1:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongocfg1
+    expose:
+      - "27017"
+
+  mongocfg2:
+    container_name: mongocfg2
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --port 27017 --dbpath /data/db
+    ports:
+      - 40002:27017
+    volumes:
+      - mongocfg2:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongocfg2
+    expose:
+      - "27017"
+
+  mongocfg3:
+    container_name: mongocfg3
+    image: mongo
+    command: mongod --configsvr --replSet mongors1conf --port 27017 --dbpath /data/db
+    ports:
+      - 40003:27017
+    volumes:
+      - mongocfg3:/data/db
+    networks:
+      internalnetwork:
+        aliases:
+          - mongocfg3
+    expose:
+      - "27017"
+
+  ######## MONGODB MONGOS ########
+
+  mongos1:
+    container_name: mongos1
+    image: mongo
+    command: mongos --configdb "mongors1conf/mongocfg3:27017,mongocfg2:27017,mongocfg3:27017" --bind_ip 0.0.0.0 --port 27017
+    ports:
+      - 60000:27017
+    depends_on:
+      - mongors1n1
+      - mongors1n2
+      - mongors1n3
+      - mongors2n1
+      - mongors2n2
+      - mongors2n3
+      - mongors3n1
+      - mongors3n2
+      - mongors3n3
+      - mongocfg1
+      - mongocfg2
+      - mongocfg3
+    networks:
+      internalnetwork:
+        aliases:
+          - mongos1
+    expose:
+      - "27017"
+    ports:
+      - "60000:27017"
+
+networks:
+  internalnetwork: {}
+
+volumes:
+  mongors1n1: {}
+  mongors1n2: {}
+  mongors1n3: {}
+  mongors2n1: {}
+  mongors2n2: {}
+  mongors2n3: {}
+  mongors3n1: {}
+  mongors3n2: {}
+  mongors3n3: {}
+  mongocfg1: {}
+  mongocfg2: {}
+  mongocfg3: {}
